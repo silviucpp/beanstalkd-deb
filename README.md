@@ -7,8 +7,8 @@ Ant script for generating a deb package for beanstalkd on Ubuntu.
 
 You need:
 
--ant `(sudo apt-get install ant)`
--fpm `(sudo gem install fpm)`
+- ant `(sudo apt-get install ant)`
+- fpm `(sudo gem install fpm)`
 
 ##Generate a deb:
 
