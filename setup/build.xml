@@ -1,0 +1,140 @@
+<?xml version="1.0" encoding="utf-8"?>
+<project name="Setup Beanstalkd repo">
+    
+    <taskdef resource="net/sf/antcontrib/antcontrib.properties">
+        <classpath>
+            <pathelement location="ant-contrib.jar"/>
+        </classpath>
+    </taskdef>
+    
+    <loadresource property="ant.project_root">
+        <propertyresource name="basedir"/>
+        <filterchain>
+            <tokenfilter>
+                <filetokenizer/>
+                <replacestring from="/setup" to=""/>
+            </tokenfilter>
+        </filterchain>
+    </loadresource>
+    
+    <echo message="Project root: ${ant.project_root}"/>
+
+    <property file="setup.properties"/>
+
+    <!-- Targets -->
+    
+    <target name="help">
+        <echo message="make_deb -> Generate the DEB package"/>
+    </target>
+    
+    <target name="git::clone">
+        <mkdir dir="${destination}" />
+        
+        <exec executable="git" dir="${destination}" failonerror="false">
+            <arg line="clone ${repo} --branch=${branch} ${project_name}"/>
+        </exec>
+        
+        <exec executable="git" dir="${destination}/${project_name}" failonerror="true">
+            <arg line="checkout ${revision}"/>
+        </exec>
+    </target>
+            
+    <target name="get_deps">
+        
+        <antcall target="git::clone">
+            <param name="destination" value="${bk.src_path}"/>
+            <param name="repo" value="${bk.repo}"/>
+            <param name="branch" value="${bk.branch}"/>
+            <param name="revision" value="${bk.rev}"/>
+            <param name="project_name" value="beanstalkd"/>
+        </antcall>        
+    </target>
+
+    <target name="build">        
+        <exec executable="make" dir="${bk.src_root}" failonerror="true" />
+    </target>
+    
+    <target name="create_temp_dir">
+
+        <exec executable="mktemp" outputproperty="tempdir_path" failonerror="true">
+            <arg line="-d /tmp/${deb.service_name}_deb_XXXXXXXX" />
+        </exec>
+        
+        <echo message="Temp path = ${tempdir_path}"/>
+
+    </target>
+    
+    <target name="prepare_deb_files" depends="create_temp_dir">
+
+        <property name="tempdir_path" value="${tempdir_path}"/>
+        
+        <copy file="${bk.src_root}/beanstalkd" todir="${tempdir_path}/usr/bin"/>
+		<chmod file="${tempdir_path}/usr/bin/beanstalkd" perm="ugo+rx"/>
+
+		<copy todir="${tempdir_path}/etc">
+            <fileset dir="deb/etc"/>
+        </copy>
+
+        <copy todir="${tempdir_path}/var">
+            <fileset dir="deb/var"/>
+        </copy>
+
+		<copy todir="${tempdir_path}/lib">
+            <fileset dir="deb/lib"/>
+        </copy>
+
+    </target>
+    
+    <target name="make_deb" >
+        
+        <antcall target="get_deps" />
+        <antcall target="build" />
+                
+        <antcallback target="prepare_deb_files" return="tempdir_path" />
+
+        <!-- https://github.com/jordansissel/fpm/wiki -->
+
+        <exec executable="fpm" failonerror="true">
+            <arg value="-s"/>
+            <arg value="dir"/>
+            <arg value="-t"/>
+            <arg value="deb"/>
+            <arg value="-f"/>
+            <arg value="-n"/>
+            <arg value="${deb.service_name}"/>
+            <arg value="-v"/>
+            <arg value="${deb.version}"/>
+            <arg value="--log=info"/>
+            <arg value="--after-install=${deb.post_install}"/>
+            <arg value="--before-remove=${deb.pre_remove}"/>
+            <arg value="--after-remove=${deb.post_remove}"/>
+            <arg value="--deb-init=${deb.init}"/>
+            <arg value="--deb-default=${deb.default}"/>
+            <arg value="--license=MIT"/>
+            <arg value="--maintainer=${deb.maintainer}"/>
+            <arg value="--description=${deb.description}"/>
+            <arg value="--vendor=${deb.maintainer}"/>
+            <arg value="--architecture=native"/>
+            <arg value="--url=${bk.repo}"/>
+            <arg value="--depends=libc6 (>= 2.14)"/>
+            <arg value="--depends=init-system-helpers (>= 1.13~)"/>
+            <arg value="--depends=adduser"/>
+            <arg value="--depends=netbase"/>
+            <arg value="--config-files=/etc/default/beanstalkd"/>
+            <arg value="--config-files=/etc/init.d/beanstalkd"/>
+            <arg value="-C"/>
+            <arg value="${tempdir_path}"/>
+            <arg value="usr"/>
+            <arg value="etc"/>
+            <arg value="var"/>
+            <arg value="lib"/>
+        </exec>
+
+        <delete includeEmptyDirs="true">
+            <fileset dir="${tempdir_path}"/>
+        </delete>
+
+    </target>
+    
+    
+</project>
