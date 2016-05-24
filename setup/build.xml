@@ -75,13 +75,11 @@
             <fileset dir="deb/etc"/>
         </copy>
 
-        <copy todir="${tempdir_path}/var">
-            <fileset dir="deb/var"/>
-        </copy>
-
 		<copy todir="${tempdir_path}/lib">
             <fileset dir="deb/lib"/>
         </copy>
+
+		<mkdir dir="${tempdir_path}/var/lib/beanstalkd"/>
 
     </target>
     
