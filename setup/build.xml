@@ -49,9 +49,11 @@
             <param name="project_name" value="beanstalkd"/>
         </antcall>        
     </target>
-
+    
     <target name="build">        
-        <exec executable="make" dir="${bk.src_root}" failonerror="true" />
+        <exec executable="make" dir="${bk.src_root}" failonerror="true" >
+            <arg line="CFLAGS=-O2" />
+        </exec>
     </target>
     
     <target name="create_temp_dir">
