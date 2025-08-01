@@ -2,10 +2,6 @@
 ## Debian systems.
 
 BEANSTALKD_LISTEN_ADDR=0.0.0.0
-BEANSTALKD_LISTEN_PORT=11300
-
-# You can use BEANSTALKD_EXTRA to pass additional options. See beanstalkd(1)
-# for a list of the available options. Uncomment the following line for
-# persistent job storage.
-#BEANSTALKD_EXTRA="-b /var/lib/beanstalkd"
+BEANSTALKD_LISTEN_PORT=11300 
+BEANSTALKD_EXTRAS="-z 10000000"
 

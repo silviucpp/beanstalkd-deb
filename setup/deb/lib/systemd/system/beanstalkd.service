@@ -7,7 +7,7 @@ After=network.target
 User=beanstalkd
 Group=beanstalkd
 EnvironmentFile=/etc/default/beanstalkd
-ExecStart=/usr/bin/beanstalkd -l ${BEANSTALKD_LISTEN_ADDR} -p ${BEANSTALKD_LISTEN_PORT} $BEANSTALKD_EXTRAS
+ExecStart=/usr/bin/beanstalkd -l ${BEANSTALKD_LISTEN_ADDR} -p ${BEANSTALKD_LISTEN_PORT} ${BEANSTALKD_EXTRAS}
 
 [Install]
 WantedBy=multi-user.target
